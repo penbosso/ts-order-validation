@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://www.example.com/tsordervalidation/ordervalidation"
+        xmlns:tns="http://www.example.com/tsordervalidation/ordervalidation"
+        elementFormDefault="qualified">
+    <xsd:element name="OrderRequest">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="clientId" type="xsd:string" />
+                <xsd:element name="ticket" type="xsd:string" />
+                <xsd:element name="amount" type="xsd:double" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="Acknowledgement">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="clientId" type="xsd:string" />
+                <xsd:element name="orderId" type="xsd:string" />
+                <xsd:element name="isValid" type="xsd:boolean" />
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</schema>
