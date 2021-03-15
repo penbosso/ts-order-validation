@@ -19,7 +19,7 @@ public class OrderValidityindicatorEndpoint {
 
     @PayloadRoot(namespace = NAMESPACE, localPart = "OrderRequest")
     @ResponsePayload
-    public Acknowledgement getOrdervalidityStatus(@RequestPayload OrderRequest request) {System.err.println("++++++++++++++++++++++++++");
+    public Acknowledgement getOrderValidityStatus(@RequestPayload OrderRequest request) {System.err.println("++++++++++++++++++++++++++");
         return service.checkOrderValidity(request);
     }
 }
