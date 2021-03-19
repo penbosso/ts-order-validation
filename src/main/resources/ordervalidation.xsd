@@ -6,9 +6,11 @@
     <xsd:element name="OrderRequest">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element name="clientId" type="xsd:string" />
-                <xsd:element name="ticket" type="xsd:string" />
-                <xsd:element name="amount" type="xsd:double" />
+                <xsd:element name="clientId" type="xsd:long" />
+                <xsd:element name="product" type="xsd:string" />
+                <xsd:element name="side" type="xsd:string" />
+                <xsd:element name="quantity" type="xsd:int" />
+                <xsd:element name="price" type="xsd:double" />
             </xsd:sequence>
         </xsd:complexType>
     </xsd:element>
@@ -16,8 +18,8 @@
     <xsd:element name="Acknowledgement">
         <xsd:complexType>
             <xsd:sequence>
-                <xsd:element name="clientId" type="xsd:string" />
-                <xsd:element name="orderId" type="xsd:string" />
+                <xsd:element name="orderId" type="xsd:long" />
+                <xsd:element name="comment" type="xsd:string" />
                 <xsd:element name="isValid" type="xsd:boolean" />
             </xsd:sequence>
         </xsd:complexType>
