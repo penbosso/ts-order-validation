@@ -85,7 +85,7 @@ public class Order {
 
     @Override
     public String toString() {
-        return "Order{" +
+        return "***Order{" +
                 "id=" + id +
                 ", product='" + product + '\'' +
                 ", side='" + side + '\'' +
@@ -93,6 +93,6 @@ public class Order {
                 ", quantity=" + quantity +
                 ", clientId=" + clientId +
                 ", isValid=" + isValid +
-                '}';
+                "}***";
     }
 }
