@@ -56,7 +56,7 @@ public class OrderValidationService {
                 //check if product exist and
                 // check if buy price is reasonable
 
-            } else if (request.getPrice() > marketData.getASK_PRICE() + marketData.getMAX_PRICE_SHIFT()) {
+            } else if (request.getPrice() > marketData.getBID_PRICE() + marketData.getMAX_PRICE_SHIFT()) {
                 message = "High chance of price not being accepted";
             }
         }
