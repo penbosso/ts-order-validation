@@ -1,16 +1,17 @@
 package com.example.tsordervalidation.config;
 
+import com.example.tsordervalidation.component.OrderPub;
 import com.example.tsordervalidation.component.OrderPublisher;
+import com.example.tsordervalidation.order.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.listener.Topic;
-import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 
+@Configuration
 public class RedisConfig {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
@@ -18,7 +19,7 @@ public class RedisConfig {
 
 
     @Bean
-    private ChannelTopic topic() {
+    ChannelTopic topic() {
         return new ChannelTopic("validated-order");
     }
 
@@ -26,12 +27,12 @@ public class RedisConfig {
     RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
-        redisTemplate.setValueSerializer(new GenericToStringSerializer<Object>(Object.class));
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<Order>(Order.class));
         return redisTemplate;
     }
 
     @Bean
-    OrderPublisher orderPublisher() {
+    OrderPub orderPub() {
         return new OrderPublisher(redisTemplate(redisConnectionFactory), topic());
     }
 }
