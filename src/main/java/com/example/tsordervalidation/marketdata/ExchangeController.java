@@ -12,7 +12,7 @@ public class ExchangeController {
     @Autowired
     private ExchangeDao exchangeData;
 
-    @GetMapping("/exchanges")
+    @GetMapping("/all-exchanges")
     public List<Exchange> allExchanges() {
         return exchangeData.getExchangeList();
     }

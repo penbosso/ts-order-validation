@@ -15,7 +15,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ public class OrderValidationService {
 
     private final Logger log = LoggerFactory.getLogger(OrderValidationService.class);
 
-    private List<MarketData> getMarketDataList(String exchangeDataUrl){
+    private List<MarketData> getMarketDataList(String exchangeDataUrl) {
 
         //access to exchange list in exchange dow
         RestTemplate restTemplate = new RestTemplate();
@@ -40,7 +39,8 @@ public class OrderValidationService {
                 restTemplate.exchange(
                         exchangeDataUrl,
                         HttpMethod.GET, null,
-                        new ParameterizedTypeReference<List<MarketData>>() {}
+                        new ParameterizedTypeReference<List<MarketData>>() {
+                        }
                 );
         List<MarketData> MarketDataList = responseEntity.getBody();
         return MarketDataList.stream().collect(Collectors.toList());
@@ -61,35 +61,32 @@ public class OrderValidationService {
 
 
         MarketData marketData = null;
-        for (MarketData md: MarketDataList) {
-            if (md.getTICKER().equals(request.getProduct()) ){
+        for (MarketData md : MarketDataList) {
+            if (md.getTICKER().equals(request.getProduct())) {
                 marketData = md;
                 break;
             }
         }
-        if(marketData == null) {
+        if (marketData == null) {
             return setAckValidity(request, false, "The product does not exist in the market");
         }
         log.info(marketData.toString());
 
-        // Selling
-        if (request.getSide() == "SELL") {
+
+        // check if buy price is reasonable
+        if (request.getPrice() > marketData.getMAX_PRICE_SHIFT() + marketData.getMAX_PRICE_SHIFT()) {
+            message = request.getPrice() + " is too high for the current market values for this product";
+
+        } else if (request.getPrice() < marketData.getMAX_PRICE_SHIFT() + marketData.getMAX_PRICE_SHIFT()) {
+            message = request.getPrice() + " is too low for the current market values for this product";
+
+        } else if (request.getSide() == "SELL" && (request.getProduct() == "IBM")) {
+            // Selling
             // check if client owns product // to be obtained from db
-            if (request.getProduct() == "IBM") {
-                message = "IBM does not exist in your portfolio";
-            } else if (request.getPrice() < marketData.getASK_PRICE() - marketData.getMAX_PRICE_SHIFT()) {
-                message = "High chance of price not being accepted";
-            }
+            message = "IBM does not exist in your portfolio";
 
-        } else {// check client account balance
-            if (request.getPrice() * request.getQuantity() > 6000) {
-                message = "Insufficient funds";
-                //check if product exist and
-                // check if buy price is reasonable
-
-            } else if (request.getPrice() > marketData.getBID_PRICE() + marketData.getMAX_PRICE_SHIFT()) {
-                message = "High chance of price not being accepted";
-            }
+        } else if (request.getSide() == "BUY" && request.getPrice() * request.getQuantity() > 6000) {// check client account balance
+            message = "Insufficient funds";
         }
 
         if (message == "") {
@@ -110,8 +107,8 @@ public class OrderValidationService {
                         orderRequest.getPrice(),
                         orderRequest.getQuantity(),
                         orderRequest.getClientId(),
-                        isValid
-                ));
+                        isValid,
+                        orderRequest.getStrategy()));
 
         Acknowledgement acknowledgement = new Acknowledgement();
         acknowledgement.setComment(message);

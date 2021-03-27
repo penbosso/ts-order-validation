@@ -14,17 +14,27 @@ public class Order {
     private int quantity;
     private long clientId;
     private boolean isValid;
+    private int strategy;
 
     public Order() {
     }
 
-    public Order(String product, String side, Double price, int quantity, long clientId, boolean isValid) {
+    public Order(String product, String side, Double price, int quantity, long clientId, boolean isValid, int strategy) {
         this.product = product;
         this.side = side;
         this.price = price;
         this.quantity = quantity;
         this.clientId = clientId;
         this.isValid = isValid;
+        this.strategy = strategy;
+    }
+
+    public int getStrategy() {
+        return strategy;
+    }
+
+    public void setStrategy(int strategy) {
+        this.strategy = strategy;
     }
 
     public long getId() {
