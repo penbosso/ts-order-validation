@@ -31,18 +31,22 @@ public class OrderValidationService {
 
     private final Logger log = LoggerFactory.getLogger(OrderValidationService.class);
 
-    private List<MarketData> getMarketDataList(String exchangeDataUrl) {
+    private List<MarketData> getMarketDataList(String ticker) {
+        System.out.println("******************************* in get mark data for -> "+ticker);
 
-        //access to exchange list in exchange dow
+        String engineMdUrl = String.format("http://localhost:8083/v0/api/md-by-ticker/%s",ticker);
+        //
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<List<MarketData>> responseEntity =
                 restTemplate.exchange(
-                        exchangeDataUrl,
+                        engineMdUrl,
                         HttpMethod.GET, null,
                         new ParameterizedTypeReference<List<MarketData>>() {
                         }
                 );
         List<MarketData> MarketDataList = responseEntity.getBody();
+
+        System.out.println("*******************************data L T price: "+ MarketDataList.get(0).getLAST_TRADED_PRICE());
         return MarketDataList.stream().collect(Collectors.toList());
     }
 
@@ -52,41 +56,78 @@ public class OrderValidationService {
 
         boolean isValid = false;
         String message = "";
-
+        boolean isHighPrice = true;
+        boolean isLowPrice = true;
+        boolean isOverMarketQuantity = true;
+        boolean isOverBuyLimit = false;
+        boolean isOverSellLimit = false;
 
         //Todo: to be continued working with all exchanges
 
         // get market data
-        List<MarketData> MarketDataList = getMarketDataList(exchangeData.getExchangeList().get(0).getUrl() + "/md");
-
-
+        List<MarketData> MarketDataList = getMarketDataList(request.getProduct());
         MarketData marketData = null;
         for (MarketData md : MarketDataList) {
-            if (md.getTICKER().equals(request.getProduct())) {
+            if(isHighPrice && !(request.getPrice() > md.getLAST_TRADED_PRICE() + md.getMAX_PRICE_SHIFT())) {
+                isHighPrice = !isHighPrice;
                 marketData = md;
-                break;
+            }
+            if(isLowPrice && !(request.getPrice() < md.getLAST_TRADED_PRICE() - md.getMAX_PRICE_SHIFT())) {
+                isLowPrice = !isLowPrice;
+                marketData = md;
+            }
+            if(isOverMarketQuantity && !(request.getQuantity() > md.getSELL_LIMIT())) {
+               isOverMarketQuantity = !isOverMarketQuantity;
+                marketData = md;
+            }
+            if((request.getQuantity() > md.getBUY_LIMIT())) {
+                isOverBuyLimit = true;
+                marketData = md;
+            } else {
+                isOverBuyLimit = false;
+            }
+            if((request.getQuantity() > md.getSELL_LIMIT())) {
+                isOverSellLimit = true;
+                marketData = md;
+            } else {
+                isOverSellLimit = false;
             }
         }
-        if (marketData == null) {
+
+
+        if (MarketDataList.isEmpty()) {
             return setAckValidity(request, false, "The product does not exist in the market");
         }
-        log.info(marketData.toString());
+        if (request.getQuantity() < 1) {
+            return setAckValidity(request, false, "Quantity can not be less than 1");
+        }
+        log.info(MarketDataList.toString());
 
 
         // check if buy price is reasonable
-        if (request.getPrice() > marketData.getMAX_PRICE_SHIFT() + marketData.getMAX_PRICE_SHIFT()) {
-            message = request.getPrice() + " is too high for the current market values for this product";
+        if (isHighPrice) {
+            message = request.getPrice() + " is too high "+(marketData.getLAST_TRADED_PRICE() + marketData.getMAX_PRICE_SHIFT())+" for the current market values for this product";
 
-        } else if (request.getPrice() < marketData.getMAX_PRICE_SHIFT() + marketData.getMAX_PRICE_SHIFT()) {
-            message = request.getPrice() + " is too low for the current market values for this product";
+        } else if (isLowPrice) {
+            message = request.getPrice() + " is too low  "+(marketData.getLAST_TRADED_PRICE() + marketData.getMAX_PRICE_SHIFT())+" for the current market values for this product";
 
-        } else if (request.getSide() == "SELL" && (request.getProduct() == "IBM")) {
+        } else if (request.getSide().equals("SELL") && (request.getProduct().equals("IBM1"))) { // actual client stocks
             // Selling
             // check if client owns product // to be obtained from db
             message = "IBM does not exist in your portfolio";
 
-        } else if (request.getSide() == "BUY" && request.getPrice() * request.getQuantity() > 6000) {// check client account balance
+        } else if (request.getSide().equals("SELL") && (isOverSellLimit)) { // actual client stocks
+            // Selling
+            // check if client owns product // to be obtained from db
+            message =  "You can not sell more than "+marketData.getSELL_LIMIT();;
+
+        } else if (request.getSide().equals("BUY") && request.getPrice() * request.getQuantity() > 6000) {// check client account balance
             message = "Insufficient funds";
+        } else if (request.getSide().equals("BUY") && (isOverBuyLimit)) { // actual client stocks
+            // Selling
+            // check if client owns product // to be obtained from db
+            message = "You can not buy more than "+marketData.getBUY_LIMIT();
+
         }
 
         if (message == "") {
