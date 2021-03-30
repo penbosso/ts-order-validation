@@ -19,6 +19,24 @@ public class MarketData {
     String TICKER;
     @JsonProperty(value="MAX_PRICE_SHIFT")
     double MAX_PRICE_SHIFT;
+    String exchangeUrl;
+    double changeInPrice = 0;
+
+    public String getExchangeUrl() {
+        return exchangeUrl;
+    }
+
+    public void setExchangeUrl(String exchangeUrl) {
+        this.exchangeUrl = exchangeUrl;
+    }
+
+    public Double getChangeInPrice() {
+        return changeInPrice;
+    }
+
+    public void setChangeInPrice(Double changeInPrice) {
+        this.changeInPrice = changeInPrice;
+    }
 
     public int getSELL_LIMIT() {
         return SELL_LIMIT;
