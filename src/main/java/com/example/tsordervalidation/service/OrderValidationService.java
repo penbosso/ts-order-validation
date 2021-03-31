@@ -32,7 +32,6 @@ public class OrderValidationService {
     private final Logger log = LoggerFactory.getLogger(OrderValidationService.class);
 
     private List<MarketData> getMarketDataList(String ticker) {
-        System.out.println("******************************* in get mark data for -> "+ticker);
 
         String engineMdUrl = String.format("http://localhost:8083/v0/api/md-by-ticker/%s",ticker);
         //
@@ -46,7 +45,6 @@ public class OrderValidationService {
                 );
         List<MarketData> MarketDataList = responseEntity.getBody();
 
-        System.out.println("*******************************data L T price: "+ MarketDataList.get(0).getLAST_TRADED_PRICE());
         return MarketDataList.stream().collect(Collectors.toList());
     }
 
@@ -121,7 +119,7 @@ public class OrderValidationService {
             // check if client owns product // to be obtained from db
             message =  "You can not sell more than "+marketData.getSELL_LIMIT();;
 
-        } else if (request.getSide().equals("BUY") && request.getPrice() * request.getQuantity() > 6000) {// check client account balance
+        } else if (request.getSide().equals("BUY") && request.getPrice() * request.getQuantity() > 80000) {// check client account balance
             message = "Insufficient funds";
         } else if (request.getSide().equals("BUY") && (isOverBuyLimit)) { // actual client stocks
             // Selling
@@ -156,10 +154,7 @@ public class OrderValidationService {
         acknowledgement.setIsValid(isValid);
         acknowledgement.setOrderId(newOrder.getId());
 
-        // TODO://report trade activity
-        //reporting service OrderAcitvity(orderId, action, status, dataTime)
-
-        //ToDo://proceed to trade engine if valid.
+        //report trade activity.
         orderPublisher.publish(newOrder);
         return acknowledgement;
     }
